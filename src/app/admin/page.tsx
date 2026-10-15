@@ -57,7 +57,7 @@ export default function AdminPage() {
                 </button>
               </li>
             ))}
-            {confirmed.length === 0 && <p className="py-2 text-sm text-zinc-400">No one yet.</p>}
+            {confirmed.length === 0 && <li className="py-2 text-sm text-zinc-600">No one yet.</li>}
           </ul>
         </section>
 
@@ -74,7 +74,7 @@ export default function AdminPage() {
                 </div>
               </li>
             ))}
-            {waitlisted.length === 0 && <p className="py-2 text-sm text-zinc-400">Empty.</p>}
+            {waitlisted.length === 0 && <li className="py-2 text-sm text-zinc-600">Empty.</li>}
           </ul>
         </section>
       </main>

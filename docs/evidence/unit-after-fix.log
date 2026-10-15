@@ -1,0 +1,13 @@
+
+> event-rsvp@0.1.0 test:unit
+> vitest run
+
+
+ RUN  v5.0.4 /home/jhonsalya/projects/event-rsvp
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  12:55:18
+   Duration  376ms (tests 63%, import 18%, transform 12%, worker 7%)
+

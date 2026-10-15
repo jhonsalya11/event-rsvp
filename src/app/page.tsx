@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 type EventInfo = {
   id: number;
@@ -18,6 +18,10 @@ export default function Home() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [result, setResult] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState("");
+  const nameId = useId();
+  const emailId = useId();
 
   async function loadEvent() {
     const res = await fetch(`/api/events/${EVENT_ID}`);
@@ -26,30 +30,38 @@ export default function Home() {
 
   useEffect(() => {
     loadEvent();
+    // Fix for bug #5: a fresh idempotency key per form load/reset. Even a
+    // fast double-click now sends the same key twice, and the server
+    // dedupes on it instead of creating two registrations.
+    setIdempotencyKey(crypto.randomUUID());
   }, []);
 
-  // BUG #5 (double-submit): no disabled-while-submitting guard, no
-  // idempotency key generated/sent. A fast double-click fires two
-  // POST requests and creates two registrations for the same person.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch(`/api/events/${EVENT_ID}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setResult(
-        data.status === "confirmed"
-          ? "You're in! See you there."
-          : `Event is full — you're #${data.position} on the waitlist.`
-      );
-      setName("");
-      setEmail("");
-      loadEvent();
-    } else {
-      setResult(data.error ?? "Something went wrong.");
+    if (submitting) return; // fix: ignore re-entrant submits while one is in flight
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/events/${EVENT_ID}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, idempotencyKey }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult(
+          data.status === "confirmed"
+            ? "You're in! See you there."
+            : `Event is full — you're #${data.position} on the waitlist.`
+        );
+        setName("");
+        setEmail("");
+        setIdempotencyKey(crypto.randomUUID());
+        loadEvent();
+      } else {
+        setResult(data.error ?? "Something went wrong.");
+      }
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -64,19 +76,18 @@ export default function Home() {
         <h1 className="text-2xl font-bold text-zinc-900">{event.title}</h1>
         <p className="mt-2 text-zinc-600">{event.description}</p>
 
-        <div className="mt-4 flex items-center gap-3 text-sm">
+        <div className="mt-4 flex items-center gap-3 text-sm" role="status" aria-live="polite">
           <span className="text-zinc-500">
             {event.confirmedCount}/{event.capacity} confirmed
           </span>
-          {/* BUG #6 (accessibility): low-contrast badge text, color is the
-              only signal of state (no icon/text distinction for screen
-              readers or color-blind users). */}
+          {/* Fix for bug #6: text/weight difference (not just color) carries
+              the state, and contrast now passes WCAG AA for normal text. */}
           {isFull ? (
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-orange-300">
+            <span className="rounded-full bg-orange-100 px-3 py-1 font-semibold text-orange-800">
               Sold out — join waitlist
             </span>
           ) : (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-green-700">
+            <span className="rounded-full bg-green-100 px-3 py-1 font-semibold text-green-800">
               {seatsLeft} seats left
             </span>
           )}
@@ -84,11 +95,12 @@ export default function Home() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            {/* BUG #6 continued: input below has no associated <label>,
-                only a placeholder — screen readers announce nothing useful. */}
+            <label htmlFor={nameId} className="mb-1 block text-sm font-medium text-zinc-700">
+              Full name
+            </label>
             <input
+              id={nameId}
               type="text"
-              placeholder="Full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -96,9 +108,12 @@ export default function Home() {
             />
           </div>
           <div>
+            <label htmlFor={emailId} className="mb-1 block text-sm font-medium text-zinc-700">
+              Email
+            </label>
             <input
-              type="text"
-              placeholder="Email"
+              id={emailId}
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -107,15 +122,20 @@ export default function Home() {
           </div>
           <button
             type="submit"
-            className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white hover:bg-zinc-700"
+            disabled={submitting}
+            className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isFull ? "Join waitlist" : "Register"}
+            {submitting ? "Submitting…" : isFull ? "Join waitlist" : "Register"}
           </button>
         </form>
 
-        {result && <p className="mt-4 text-sm text-zinc-700">{result}</p>}
+        {result && (
+          <p className="mt-4 text-sm text-zinc-700" role="status" aria-live="polite">
+            {result}
+          </p>
+        )}
 
-        <a href="/admin" className="mt-8 block text-center text-xs text-zinc-400 hover:text-zinc-600">
+        <a href="/admin" className="mt-8 block text-center text-xs text-zinc-600 hover:text-zinc-900">
           Organizer view
         </a>
       </main>
