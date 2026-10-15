@@ -7,6 +7,13 @@ Each one is documented in [`docs/bugs.md`](docs/bugs.md) with the actual
 failing-test evidence, then fixed in later commits with before/after
 numbers in [`docs/evidence/`](docs/evidence).
 
+**Live demo:** https://event-rsvp-red.vercel.app (Next.js on Vercel +
+Postgres on Neon — a separate, parallel data layer from the SQLite path
+below, see `docs/evidence/deployment-notes.md` for 3 real deployment
+failures hit getting it there, and `docs/evidence/vercel-load-test-results.md`
+for what the same load test found on a genuinely multi-instance
+deployment vs. running locally).
+
 Full write-up: *[link to the /work article goes here once published]*
 
 ## The app
@@ -36,7 +43,9 @@ CI (`.github/workflows/ci.yml`) runs unit + E2E + build on every push.
 
 ## Stack
 
-Next.js (App Router), TypeScript, better-sqlite3, Tailwind CSS.
+Next.js (App Router), TypeScript, Tailwind CSS. SQLite (better-sqlite3)
+for local dev and the whole test suite; Postgres (Neon) for the
+production deployment — see `src/lib/data.ts` for the selector.
 
 ## Local development
 
@@ -46,4 +55,5 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Admin/organizer
-view is at `/admin`.
+view is at `/admin`. Uses SQLite automatically — no setup needed. Set
+`DATABASE_URL` (see `.env.example`) to run against Postgres instead.

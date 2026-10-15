@@ -81,4 +81,18 @@ fixing the bugs you set out to seed: it found things outside the plan.
 ---
 
 Full failing unit-test run before any fix: see `docs/evidence/unit-before-fix.log`.
-Load test before/after numbers: see `docs/evidence/load-test-results.md`.
+Load test before/after numbers (local SQLite): see `docs/evidence/load-test-results.md`.
+
+## Production deployment (Vercel + Neon Postgres)
+
+A separate, parallel data layer (`src/lib/registration-pg.ts` +
+`db-pg.ts`) runs the same fixed logic against real Postgres for a live
+demo, instead of SQLite. Re-ran the bug #1 load test against the real
+deployed URL (genuinely separate serverless instances, not one Node
+process) to check whether the race that never reproduced locally would
+show up there instead. It didn't — 0 overbooking, exactly 50/50 confirmed
+— but a different, equally real tradeoff showed up instead: ~13x higher
+per-request latency from serverless + cross-region WebSocket connection
+overhead. Full writeup in `docs/evidence/vercel-load-test-results.md`.
+Deployment itself hit 3 separate real failures (build + 2 runtime) before
+it worked at all — see `docs/evidence/deployment-notes.md`.
