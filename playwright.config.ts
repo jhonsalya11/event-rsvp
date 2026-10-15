@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "./tests",
+  testIgnore: ["**/unit/**", "**/load/**"],
   fullyParallel: true,
   reporter: [["html", { outputFolder: "playwright-report", open: "never" }], ["list"]],
   use: {

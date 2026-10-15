@@ -20,13 +20,15 @@ next person in line.
 | Layer | Tool | What it catches |
 |---|---|---|
 | Unit | Vitest | Capacity off-by-one, email validation |
-| E2E | Playwright | Registration flow, double-submit idempotency |
+| API | Playwright (`request` fixture) | HTTP contract: status codes, error shapes, idempotency |
+| E2E | Playwright (browser) | Registration flow, double-submit idempotency |
 | Accessibility | Playwright + axe-core | WCAG contrast, semantic HTML |
 | Load | k6 | Race condition under concurrent registrations |
 
 ```bash
 npm run test:unit   # Vitest
-npm run test:e2e    # Playwright (needs: npx playwright install chromium)
+npm run test:e2e    # Playwright: API + browser E2E + accessibility
+                     # (needs: npx playwright install chromium)
 npm run test:load   # k6 (needs: k6 installed separately, server running)
 ```
 

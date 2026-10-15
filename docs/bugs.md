@@ -42,7 +42,16 @@ Received: "confirmed"
 Cancelling a confirmed registration and promoting the next waitlisted
 person happens in two separate statements, not atomically. Two
 concurrent cancellations could both try to promote the same slot.
-**Caught by:** k6 load test (targeted scenario).
+**Honest result:** built the targeted k6 scenario (capacity-2 event,
+cancel two confirmed seats concurrently) and ran it 4 times against
+the buggy code. **Never reproduced it** — Node's single-threaded,
+synchronous-SQLite execution model doesn't actually let the two
+operations interleave at the JS level, even without a transaction.
+Full writeup, including why the fix is still worth keeping for a
+different deployment shape, in `docs/evidence/race-scenario-results.md`.
+This file originally claimed this was "caught by a k6 load test" before
+that scenario was actually built — that was wrong, and this is the
+correction.
 
 ## #5 — Double-submit (idempotency)
 The registration form has no disabled-while-submitting guard and no
