@@ -10,7 +10,12 @@ the fix, with the actual failing-test evidence.
 registration in two separate, non-atomic SQL statements. Two concurrent
 requests can both read the same count before either insert lands, and
 both proceed to confirm — overbooking the event.
-**Caught by:** k6 load test hammering the endpoint concurrently.
+**Caught by:** k6 load test, 50 VUs / 500 requests against a 50-seat
+event. Result: **51 confirmed (overbooked by 1)** before the fix,
+**exactly 50** after. Full numbers and an honest note on severity (this
+app's single-threaded Node + synchronous SQLite driver narrows the race
+window compared to a multi-process stack) in
+`docs/evidence/load-test-results.md`.
 
 ## #2 — Off-by-one (capacity check)
 The capacity check uses `>` instead of `>=`, letting exactly one extra
@@ -51,6 +56,20 @@ creates two registrations for the same person.
 - Form inputs have no associated `<label>`, only placeholders.
 **Caught by:** Playwright + axe-core automated accessibility scan.
 
+## Bonus — found by the tooling, not planned
+The axe-core scan caught two more real issues that weren't part of the
+original 6, after the planned ones were fixed:
+- A `<p>` rendered as a direct child of a `<ul>` (invalid list
+  structure — admin page's "No one yet." / "Empty." placeholders).
+- A second insufficient-contrast color, `text-zinc-400` (#9f9fa9) on
+  white (2.62:1, needs 4.5:1), on those same placeholders and on the
+  homepage's "Organizer view" link — a different color than bug #6's
+  orange badge, missed when only the planned bug was in mind.
+
+This is the actual point of running a real scanner instead of just
+fixing the bugs you set out to seed: it found things outside the plan.
+
 ---
 
 Full failing unit-test run before any fix: see `docs/evidence/unit-before-fix.log`.
+Load test before/after numbers: see `docs/evidence/load-test-results.md`.
