@@ -1,4 +1,5 @@
-import { Pool } from "@neondatabase/serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
 
 // Production data layer (Neon/Postgres), used only when DATABASE_URL is
 // set — see src/lib/data.ts for the selector. Local dev and the whole
@@ -8,6 +9,13 @@ import { Pool } from "@neondatabase/serverless";
 // registration logic needs real interactive transactions with row
 // locking (BEGIN ... SELECT ... FOR UPDATE ... COMMIT), which the
 // one-shot HTTP query function can't express.
+//
+// Pool uses a WebSocket connection under the hood. It worked without
+// this in plain local Node.js, but Vercel's serverless Node.js runtime
+// needs the constructor set explicitly (no native WebSocket available
+// in that runtime) -- without this line, every query fails at runtime
+// with no detail surfaced to the client (silent 500s).
+neonConfig.webSocketConstructor = ws;
 
 let _pool: Pool | null = null;
 
