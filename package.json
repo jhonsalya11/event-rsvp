@@ -12,6 +12,7 @@
     "test:load": "k6 run tests/load/registration.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
     "better-sqlite3": "^13.0.3",
     "next": "16.4.1",
     "react": "19.3.0",

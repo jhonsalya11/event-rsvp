@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { registerForEvent } from "@/lib/registration";
+import { registerForEvent } from "@/lib/data";
 
 export async function POST(
   req: NextRequest,
@@ -16,7 +16,7 @@ export async function POST(
     idempotencyKey?: string;
   };
 
-  const result = registerForEvent(Number(id), name ?? "", email ?? "", idempotencyKey);
+  const result = await registerForEvent(Number(id), name ?? "", email ?? "", idempotencyKey);
 
   if (result.status === "error") {
     return NextResponse.json({ error: result.message }, { status: 400 });

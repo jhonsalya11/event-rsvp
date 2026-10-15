@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getEventWithCounts } from "@/lib/registration";
+import { getEventWithCounts } from "@/lib/data";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const event = getEventWithCounts(Number(id));
+  const event = await getEventWithCounts(Number(id));
   if (!event) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
