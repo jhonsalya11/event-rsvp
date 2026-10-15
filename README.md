@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# event-rsvp
 
-## Getting Started
+A small event registration + waitlist app, built as a **test-automation
+showcase**: the first commit ([`3c79562`](../../commit/3c79562)) ships
+with 6 intentionally seeded bugs, one per layer of a real test pyramid.
+Each one is documented in [`docs/bugs.md`](docs/bugs.md) with the actual
+failing-test evidence, then fixed in later commits with before/after
+numbers in [`docs/evidence/`](docs/evidence).
 
-First, run the development server:
+Full write-up: *[link to the /work article goes here once published]*
+
+## The app
+
+Register for an event with a limited number of seats. Once full, new
+registrants join a waitlist; cancelling a confirmed seat promotes the
+next person in line.
+
+## The test pyramid
+
+| Layer | Tool | What it catches |
+|---|---|---|
+| Unit | Vitest | Capacity off-by-one, email validation |
+| E2E | Playwright | Registration flow, double-submit idempotency |
+| Accessibility | Playwright + axe-core | WCAG contrast, semantic HTML |
+| Load | k6 | Race condition under concurrent registrations |
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run test:unit   # Vitest
+npm run test:e2e    # Playwright (needs: npx playwright install chromium)
+npm run test:load   # k6 (needs: k6 installed separately, server running)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+CI (`.github/workflows/ci.yml`) runs unit + E2E + build on every push.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Next.js (App Router), TypeScript, better-sqlite3, Tailwind CSS.
 
-## Learn More
+## Local development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000). Admin/organizer
+view is at `/admin`.
